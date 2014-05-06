@@ -1,0 +1,1725 @@
+  [1m[36m (1.7ms)[0m  [1mCREATE TABLE "schema_migrations" ("version" varchar(255) NOT NULL) [0m
+  [1m[35m (1.1ms)[0m  CREATE UNIQUE INDEX "unique_schema_migrations" ON "schema_migrations" ("version")
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1mSELECT "schema_migrations".* FROM "schema_migrations"[0m
+Migrating to CreateAccounts (1)
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36m (0.5ms)[0m  [1mCREATE TABLE "accounts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar(255), "full_domain" varchar(255), "created_at" datetime, "updated_at" datetime) [0m
+  [1m[35mSQL (0.3ms)[0m  INSERT INTO "schema_migrations" ("version") VALUES (?)  [["version", "1"]]
+  [1m[36m (1.2ms)[0m  [1mcommit transaction[0m
+Migrating to DeviseCreateUsers (2)
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36m (0.6ms)[0m  [1mCREATE TABLE "users" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar(255) DEFAULT '' NOT NULL, "encrypted_password" varchar(255) DEFAULT '' NOT NULL, "reset_password_token" varchar(255), "reset_password_sent_at" datetime, "remember_created_at" datetime, "sign_in_count" integer DEFAULT 0 NOT NULL, "current_sign_in_at" datetime, "last_sign_in_at" datetime, "current_sign_in_ip" varchar(255), "last_sign_in_ip" varchar(255), "name" varchar(255), "admin" boolean, "account_id" integer, "created_at" datetime, "updated_at" datetime) [0m
+  [1m[35m (0.1ms)[0m  CREATE INDEX "index_users_on_account_id" ON "users" ("account_id")
+  [1m[36m (2.0ms)[0m  [1mCREATE UNIQUE INDEX "index_users_on_email_and_account_id" ON "users" ("email", "account_id")[0m
+  [1m[35m (0.2ms)[0m  CREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token")
+  [1m[36mSQL (0.2ms)[0m  [1mINSERT INTO "schema_migrations" ("version") VALUES (?)[0m  [["version", "2"]]
+  [1m[35m (71.4ms)[0m  commit transaction
+Migrating to CreateSaasTables (3)
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35m (0.4ms)[0m  CREATE TABLE "saas_admins" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar(255) DEFAULT '' NOT NULL, "encrypted_password" varchar(128) DEFAULT '' NOT NULL, "password_salt" varchar(255) DEFAULT '' NOT NULL, "reset_password_token" varchar(255), "reset_password_sent_at" datetime, "remember_created_at" datetime, "sign_in_count" integer DEFAULT 0, "current_sign_in_at" datetime, "last_sign_in_at" datetime, "current_sign_in_ip" varchar(255), "last_sign_in_ip" varchar(255), "created_at" datetime, "updated_at" datetime) 
+  [1m[36m (0.2ms)[0m  [1mCREATE TABLE "subscription_affiliates" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar(255), "rate" decimal(6,4) DEFAULT 0.0, "created_at" datetime, "updated_at" datetime, "token" varchar(255)) [0m
+  [1m[35m (0.1ms)[0m  CREATE INDEX "index_subscription_affiliates_on_token" ON "subscription_affiliates" ("token")
+  [1m[36m (0.2ms)[0m  [1mCREATE TABLE "subscription_discounts" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar(255), "code" varchar(255), "amount" decimal(6,2) DEFAULT 0.0, "percent" boolean, "start_on" date, "end_on" date, "created_at" datetime, "updated_at" datetime, "apply_to_setup" boolean DEFAULT 't', "apply_to_recurring" boolean DEFAULT 't', "trial_period_extension" integer DEFAULT 0) [0m
+  [1m[35m (0.2ms)[0m  CREATE TABLE "subscription_payments" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "subscription_id" integer, "amount" decimal(10,2) DEFAULT 0.0, "transaction_id" varchar(255), "created_at" datetime, "updated_at" datetime, "setup" boolean, "misc" boolean, "subscription_affiliate_id" integer, "affiliate_amount" decimal(6,2) DEFAULT 0.0, "subscriber_id" integer, "subscriber_type" varchar(255)) 
+  [1m[36m (0.1ms)[0m  [1mCREATE INDEX "index_payments_on_subscriber" ON "subscription_payments" ("subscriber_id", "subscriber_type")[0m
+  [1m[35m (0.1ms)[0m  CREATE INDEX "index_subscription_payments_on_subscription_id" ON "subscription_payments" ("subscription_id")
+  [1m[36m (0.3ms)[0m  [1mCREATE TABLE "subscription_plans" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar(255), "amount" decimal(10,2), "created_at" datetime, "updated_at" datetime, "renewal_period" integer DEFAULT 1, "setup_amount" decimal(10,2), "trial_period" integer DEFAULT 1, "trial_interval" varchar(255) DEFAULT 'months', "user_limit" integer) [0m
+  [1m[35m (0.3ms)[0m  CREATE TABLE "subscriptions" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "amount" decimal(10,2), "next_renewal_at" datetime, "card_number" varchar(255), "card_expiration" varchar(255), "created_at" datetime, "updated_at" datetime, "state" varchar(255) DEFAULT 'trial', "subscription_plan_id" integer, "subscriber_id" integer, "subscriber_type" varchar(255), "renewal_period" integer DEFAULT 1, "billing_id" varchar(255), "subscription_discount_id" integer, "subscription_affiliate_id" integer, "user_limit" integer) 
+  [1m[36m (0.2ms)[0m  [1mCREATE INDEX "index_subscriptions_on_subscriber" ON "subscriptions" ("subscriber_id", "subscriber_type")[0m
+  [1m[35mSQL (0.2ms)[0m  INSERT INTO "schema_migrations" ("version") VALUES (?)  [["version", "3"]]
+  [1m[36m (74.4ms)[0m  [1mcommit transaction[0m
+Migrating to CreateRailsAdminHistoriesTable (4)
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36m (0.4ms)[0m  [1mCREATE TABLE "rails_admin_histories" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "message" text, "username" varchar(255), "item" integer, "table" varchar(255), "month" integer(2), "year" integer(5), "created_at" datetime, "updated_at" datetime) [0m
+  [1m[35m (0.2ms)[0m  CREATE INDEX "index_rails_admin_histories" ON "rails_admin_histories" ("item", "table", "month", "year")
+  [1m[36mSQL (0.1ms)[0m  [1mINSERT INTO "schema_migrations" ("version") VALUES (?)[0m  [["version", "4"]]
+  [1m[35m (1.3ms)[0m  commit transaction
+  [1m[36mActiveRecord::SchemaMigration Load (0.1ms)[0m  [1mSELECT "schema_migrations".* FROM "schema_migrations"[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "subscription_plans"
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35mSQL (104.6ms)[0m  INSERT INTO "subscription_plans" ("amount", "created_at", "name", "updated_at", "user_limit") VALUES (?, ?, ?, ?, ?)  [["amount", #<BigDecimal:7f97fb5fb438,'0.0',9(36)>], ["created_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["name", "Free"], ["updated_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["user_limit", 2]]
+  [1m[36m (1.7ms)[0m  [1mcommit transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36mSQL (0.6ms)[0m  [1mINSERT INTO "subscription_plans" ("amount", "created_at", "name", "updated_at", "user_limit") VALUES (?, ?, ?, ?, ?)[0m  [["amount", #<BigDecimal:7f97fb609f10,'0.1E2',9(36)>], ["created_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["name", "Basic"], ["updated_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["user_limit", 5]]
+  [1m[35m (1.3ms)[0m  commit transaction
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35mSQL (0.4ms)[0m  INSERT INTO "subscription_plans" ("amount", "created_at", "name", "updated_at") VALUES (?, ?, ?, ?)  [["amount", #<BigDecimal:7f97fb61bc60,'0.3E2',9(36)>], ["created_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["name", "Premium"], ["updated_at", Tue, 06 May 2014 13:03:16 UTC +00:00]]
+  [1m[36m (1.3ms)[0m  [1mcommit transaction[0m
+  [1m[35m (0.2ms)[0m  begin transaction
+Binary data inserted for `string` type on column `encrypted_password`
+  [1m[36mSQL (0.8ms)[0m  [1mINSERT INTO "saas_admins" ("created_at", "email", "encrypted_password", "updated_at") VALUES (?, ?, ?, ?)[0m  [["created_at", Tue, 06 May 2014 13:03:16 UTC +00:00], ["email", "0ac170ae@example.com"], ["encrypted_password", "$2a$10$SSRmW80U8msoBXuuztw4xuRiqhH15FOR2uny0xMSa5irv3uoxyaCK"], ["updated_at", Tue, 06 May 2014 13:03:16 UTC +00:00]]
+  [1m[35m (1.3ms)[0m  commit transaction
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:07:40 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (55.6ms)[0m  [1mSELECT "schema_migrations".* FROM "schema_migrations"[0m
+Processing by ContentController#index as HTML
+  [1m[35mAccount Load (21.8ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (117.9ms)[0m  SELECT "saas_admins".* FROM "saas_admins" ORDER BY "saas_admins"."id" ASC LIMIT 1
+  Rendered content/index.html.erb within layouts/application (227.4ms)
+Completed 200 OK in 16824ms (Views: 13059.8ms | ActiveRecord: 140.8ms)
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:08:01 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:08:01 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:08:01 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:08:02 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:08:02 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:08:02 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:08:03 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:04 +0300
+  [1m[36mActiveRecord::SchemaMigration Load (14.0ms)[0m  [1mSELECT "schema_migrations".* FROM "schema_migrations"[0m
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:05 +0300
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:05 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:05 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:05 +0300
+
+
+Started GET "/signup" for 127.0.0.1 at 2014-05-06 16:09:33 +0300
+Processing by AccountsController#plans as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (368.6ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" ORDER BY amount desc[0m
+  Rendered accounts/plans.html.erb within layouts/application (244.8ms)
+Completed 200 OK in 730ms (Views: 311.1ms | ActiveRecord: 369.5ms)
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:09:34 +0300
+
+
+Started GET "/saas_admin" for 127.0.0.1 at 2014-05-06 16:13:13 +0300
+Processing by RailsAdmin::MainController#dashboard as HTML
+  [1m[35mAccount Load (0.7ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+Completed 401 Unauthorized in 5ms
+
+
+Started GET "/saas_admins/sign_in" for 127.0.0.1 at 2014-05-06 16:13:13 +0300
+Processing by Devise::SessionsController#new as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  Rendered devise/shared/_links.erb (1.6ms)
+  Rendered saas_admins/sessions/new.html.erb within layouts/application (119.0ms)
+Completed 200 OK in 250ms (Views: 235.3ms | ActiveRecord: 0.5ms)
+
+
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:14 +0300
+
+
+Started POST "/saas_admins/sign_in" for 127.0.0.1 at 2014-05-06 16:13:34 +0300
+Processing by Devise::SessionsController#create as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"2Hu1CSZzKfp+Dw2LtWv775GWBVn9iCpmPZEE+Onkb+0=", "saas_admin"=>{"email"=>"0ac170ae@example.com", "password"=>"[FILTERED]", "remember_me"=>"1"}, "commit"=>"Sign in"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.4ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."email" = '0ac170ae@example.com' ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35mSQL (157.5ms)[0m  UPDATE "saas_admins" SET "remember_created_at" = ?, "updated_at" = ? WHERE "saas_admins"."id" = 1  [["remember_created_at", Tue, 06 May 2014 13:13:34 UTC +00:00], ["updated_at", Tue, 06 May 2014 13:13:34 UTC +00:00]]
+  [1m[36m (561.9ms)[0m  [1mcommit transaction[0m
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36mSQL (0.7ms)[0m  [1mUPDATE "saas_admins" SET "last_sign_in_at" = ?, "current_sign_in_at" = ?, "last_sign_in_ip" = ?, "current_sign_in_ip" = ?, "sign_in_count" = ?, "updated_at" = ? WHERE "saas_admins"."id" = 1[0m  [["last_sign_in_at", Tue, 06 May 2014 13:13:35 UTC +00:00], ["current_sign_in_at", Tue, 06 May 2014 13:13:35 UTC +00:00], ["last_sign_in_ip", "127.0.0.1"], ["current_sign_in_ip", "127.0.0.1"], ["sign_in_count", 1], ["updated_at", Tue, 06 May 2014 13:13:35 UTC +00:00]]
+  [1m[35m (352.1ms)[0m  commit transaction
+Redirected to http://subscriptions.dev/saas_admin/
+Completed 302 Found in 1794ms (ActiveRecord: 1073.3ms)
+
+
+Started GET "/saas_admin/" for 127.0.0.1 at 2014-05-06 16:13:36 +0300
+Processing by RailsAdmin::MainController#dashboard as HTML
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35m (0.3ms)[0m  SELECT COUNT(*) FROM "accounts"
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.updated_at desc LIMIT 1[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "saas_admins"
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" ORDER BY saas_admins.updated_at desc LIMIT 1[0m
+  [1m[35m (16.7ms)[0m  SELECT COUNT(*) FROM "subscriptions"
+  [1m[36mSubscription Load (7.4ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.updated_at desc LIMIT 1[0m
+  [1m[35m (14.9ms)[0m  SELECT COUNT(*) FROM "subscription_affiliates"
+  [1m[36mSubscriptionAffiliate Load (20.2ms)[0m  [1mSELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.updated_at desc LIMIT 1[0m
+  [1m[35m (11.8ms)[0m  SELECT COUNT(*) FROM "subscription_discounts"
+  [1m[36mSubscriptionDiscount Load (0.3ms)[0m  [1mSELECT "subscription_discounts".* FROM "subscription_discounts" ORDER BY subscription_discounts.updated_at desc LIMIT 1[0m
+  [1m[35m (16.7ms)[0m  SELECT COUNT(*) FROM "subscription_payments"
+  [1m[36mSubscriptionPayment Load (12.8ms)[0m  [1mSELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.updated_at desc LIMIT 1[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "subscription_plans"
+  [1m[36mSubscriptionPlan Load (0.3ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.updated_at desc LIMIT 1[0m
+  [1m[35m (33.8ms)[0m  SELECT COUNT(*) FROM "users"
+  [1m[36mUser Load (14.1ms)[0m  [1mSELECT "users".* FROM "users" ORDER BY users.updated_at desc LIMIT 1[0m
+  [1m[35m (55.3ms)[0m  SELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-01 00:00:00.000000' AND '2014-04-30 23:59:59.999999')
+  [1m[36m (0.2ms)[0m  [1mSELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-30 21:00:00.000000' AND '2014-05-31 20:59:59.999999')[0m
+  [1m[35m (0.1ms)[0m  SELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-06 13:13:38.341947' AND '2014-05-06 13:13:38.342040')
+  Rendered rails_admin/main/dashboard.html.haml within layouts/rails_admin/application (179.0ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (8.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (4.8ms)
+Completed 200 OK in 17790ms (Views: 15835.7ms | ActiveRecord: 207.9ms)
+
+
+Started GET "/assets/rails_admin/rails_admin.css?body=1" for 127.0.0.1 at 2014-05-06 16:13:54 +0300
+
+
+Started GET "/assets/jquery.iframe-transport.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:54 +0300
+
+
+Started GET "/assets/jquery.ui.effect.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:54 +0300
+
+
+Started GET "/assets/jquery.ui.widget.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:54 +0300
+
+
+Started GET "/assets/jquery.ui.mouse.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/jquery.remotipart.fixed.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.position.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.core.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.autocomplete.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.sortable.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.menu.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+
+
+Started GET "/assets/rails_admin/jquery.colorpicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+Started GET "/assets/rails_admin/jquery.ui.timepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.datetimepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.filter-box.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.filtering-multiselect.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.filtering-select.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.remote-form.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/jquery_nested_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/jquery.pjax.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.nested-form-hooks.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/ra.i18n.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:55 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-transition.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-affix.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-alert.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-button.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-carousel.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-collapse.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+Started GET "/assets/rails_admin/bootstrap/bootstrap-modal.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-scrollspy.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-dropdown.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-popover.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+Started GET "/assets/rails_admin/bootstrap/bootstrap-tab.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap-tooltip.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+Started GET "/assets/rails_admin/bootstrap/bootstrap-typeahead.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/ra.widgets.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/custom/ui.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/ui.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/rails_admin/rails_admin.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/assets/fontawesome-webfont.woff" for 127.0.0.1 at 2014-05-06 16:13:56 +0300
+
+
+Started GET "/saas_admin/account?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:32 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (132.0ms)
+Completed 200 OK in 336ms (Views: 277.1ms | ActiveRecord: 1.2ms)
+
+
+Started GET "/saas_admin/account" for 127.0.0.1 at 2014-05-06 16:14:34 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"model_name"=>"account"}
+
+
+Started GET "/saas_admin/saas_admin?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:36 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"saas_admin"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" ORDER BY saas_admins.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "saas_admins"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (75.8ms)
+Completed 200 OK in 93ms (Views: 83.1ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/account?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:38 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (15.1ms)
+Completed 200 OK in 33ms (Views: 24.2ms | ActiveRecord: 0.9ms)
+  [1m[35mAccount Load (0.5ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mAccount Load (0.4ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "accounts"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/application (129.8ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (11.8ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (7.2ms)
+Completed 200 OK in 5923ms (Views: 1752.8ms | ActiveRecord: 17.7ms)
+
+
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:14:42 +0300
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:14:42 +0300
+
+
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:14:42 +0300
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:14:42 +0300
+
+
+Started GET "/saas_admin/saas_admin?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:44 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"saas_admin"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" ORDER BY saas_admins.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "saas_admins"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (19.8ms)
+Completed 200 OK in 36ms (Views: 26.8ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/subscription_affiliate?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:45 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_affiliate"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionAffiliate Load (0.3ms)[0m  SELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_affiliates"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (16.2ms)
+Completed 200 OK in 39ms (Views: 23.8ms | ActiveRecord: 0.9ms)
+
+
+Started GET "/saas_admin/subscription?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:46 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscription Load (0.3ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "subscriptions"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (72.1ms)
+Completed 200 OK in 199ms (Views: 81.1ms | ActiveRecord: 1.2ms)
+
+
+Started GET "/saas_admin/subscription_affiliate?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:14:58 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_affiliate"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionAffiliate Load (0.2ms)[0m  SELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_affiliates"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (11.5ms)
+Completed 200 OK in 29ms (Views: 21.2ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/subscription_discount?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:02 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_discount"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.1ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionDiscount Load (0.3ms)[0m  [1mSELECT "subscription_discounts".* FROM "subscription_discounts" ORDER BY subscription_discounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "subscription_discounts"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (21.8ms)
+Completed 200 OK in 42ms (Views: 32.4ms | ActiveRecord: 0.9ms)
+
+
+Started GET "/saas_admin/subscription_payment?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:03 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_payment"}
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPayment Load (0.3ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_payments"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (98.7ms)
+Completed 200 OK in 137ms (Views: 105.9ms | ActiveRecord: 1.1ms)
+
+
+Started GET "/saas_admin/subscription_plan?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:06 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_plan"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.3ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.3ms)[0m  SELECT COUNT(*) FROM "subscription_plans"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (73.9ms)
+Completed 200 OK in 91ms (Views: 81.2ms | ActiveRecord: 1.1ms)
+
+
+Started GET "/saas_admin/account?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:12 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[36mAccount Load (0.4ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (21.6ms)
+Completed 200 OK in 38ms (Views: 30.1ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/account/new?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:17 +0300
+Processing by RailsAdmin::MainController#new as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[35mAccount Load (1.5ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.3ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (2.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  [1m[36m (0.3ms)[0m  [1mSELECT COUNT(*) FROM "users"[0m
+  [1m[35mUser Load (0.2ms)[0m  SELECT "users".* FROM "users" ORDER BY users.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (218.4ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_nested_one.html.haml (124.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_nested_one.html.haml (2.0ms)
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "subscription_payments"[0m
+  [1m[35mSubscriptionPayment Load (0.2ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (6.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_submit_buttons.html.haml (3.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.4ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_datetime.html.haml (3.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_datetime.html.haml (1.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (24.8ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_datetime.html.haml (1.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_datetime.html.haml (2.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.4ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.4ms)
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_select.html.haml (25.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_datetime.html.haml (1.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "subscription_plans"[0m
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_select.html.haml (6.0ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_polymorphic_association.html.haml (5.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "subscription_discounts"[0m
+  [1m[35mSubscriptionDiscount Load (0.1ms)[0m  SELECT "subscription_discounts".* FROM "subscription_discounts" ORDER BY subscription_discounts.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_select.html.haml (4.5ms)
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "subscription_affiliates"[0m
+  [1m[35mSubscriptionAffiliate Load (0.1ms)[0m  SELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_select.html.haml (3.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  [1m[36mCACHE (0.0ms)[0m  [1mSELECT COUNT(*) FROM "subscription_payments"[0m
+  [1m[35mCACHE (0.0ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (4.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/new.html.haml within layouts/rails_admin/pjax (637.0ms)
+Completed 200 OK in 719ms (Views: 692.2ms | ActiveRecord: 4.3ms)
+
+
+Started GET "/assets/rails_admin/multiselect/icon_sprite.png" for 127.0.0.1 at 2014-05-06 16:15:18 +0300
+
+
+Started GET "/assets/rails_admin/aristo/images/ui-icons_454545_256x240.png" for 127.0.0.1 at 2014-05-06 16:15:31 +0300
+
+
+Started GET "/saas_admin/saas_admin?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:46 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"saas_admin"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.3ms)[0m  SELECT "saas_admins".* FROM "saas_admins" ORDER BY saas_admins.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "saas_admins"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (137.7ms)
+Completed 200 OK in 167ms (Views: 159.3ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/subscription?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:48 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscription Load (0.3ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "subscriptions"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (14.2ms)
+Completed 200 OK in 32ms (Views: 21.5ms | ActiveRecord: 1.1ms)
+
+
+Started GET "/saas_admin/subscription_affiliate?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:49 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_affiliate"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionAffiliate Load (0.3ms)[0m  SELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_affiliates"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (13.3ms)
+Completed 200 OK in 36ms (Views: 20.9ms | ActiveRecord: 1.0ms)
+
+
+Started GET "/saas_admin/subscription_discount?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:51 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_discount"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.3ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionDiscount Load (0.2ms)[0m  [1mSELECT "subscription_discounts".* FROM "subscription_discounts" ORDER BY subscription_discounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "subscription_discounts"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (14.7ms)
+Completed 200 OK in 41ms (Views: 22.6ms | ActiveRecord: 0.9ms)
+
+
+Started GET "/saas_admin/subscription_payment?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:52 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_payment"}
+  [1m[36mAccount Load (1.5ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPayment Load (0.2ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_payments"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (13.0ms)
+Completed 200 OK in 36ms (Views: 20.2ms | ActiveRecord: 2.3ms)
+
+
+Started GET "/saas_admin/subscription_plan?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:15:53 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_plan"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.3ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.3ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "subscription_plans"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (27.8ms)
+Completed 200 OK in 51ms (Views: 36.1ms | ActiveRecord: 1.2ms)
+
+
+Started GET "/saas_admin/subscription_plan/1/edit?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:16:03 +0300
+Processing by RailsAdmin::MainController#edit as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_plan", "id"=>"1"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = 1 ORDER BY "subscription_plans"."id" ASC LIMIT 1
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.7ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  [1m[36mSubscription Load (0.4ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscription_plan_id" = ?[0m  [["subscription_plan_id", 1]]
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "subscriptions"
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.id desc[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (8.7ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_submit_buttons.html.haml (1.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/edit.html.haml within layouts/rails_admin/pjax (183.3ms)
+Completed 200 OK in 370ms (Views: 360.6ms | ActiveRecord: 1.4ms)
+
+
+Started PUT "/saas_admin/subscription_plan/1/edit" for 127.0.0.1 at 2014-05-06 16:16:12 +0300
+Processing by RailsAdmin::MainController#edit as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"TPkR0IZ5YmfkegNEx5suFdxZOzn/qVH6i9VW9EajSwM=", "subscription_plan"=>{"name"=>"Free", "amount"=>"0.0", "renewal_period"=>"1", "setup_amount"=>"", "trial_period"=>"1", "trial_interval"=>"months", "user_limit"=>"5", "subscription_ids"=>["", ""]}, "return_to"=>"http://subscriptions.dev/saas_admin/subscription_plan", "_save"=>"", "model_name"=>"subscription_plan", "id"=>"1"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.2ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = 1 ORDER BY "subscription_plans"."id" ASC LIMIT 1[0m
+  [1m[35mSubscription Load (0.2ms)[0m  SELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscription_plan_id" = ?  [["subscription_plan_id", 1]]
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35m (0.0ms)[0m  commit transaction
+  [1m[36m (0.0ms)[0m  [1mbegin transaction[0m
+  [1m[35mSQL (85.3ms)[0m  UPDATE "subscription_plans" SET "user_limit" = ?, "updated_at" = ? WHERE "subscription_plans"."id" = 1  [["user_limit", 5], ["updated_at", Tue, 06 May 2014 13:16:12 UTC +00:00]]
+  [1m[36m (487.0ms)[0m  [1mcommit transaction[0m
+Redirected to http://subscriptions.dev/saas_admin/subscription_plan
+Completed 302 Found in 590ms (ActiveRecord: 573.4ms)
+
+
+Started GET "/saas_admin/subscription_plan" for 127.0.0.1 at 2014-05-06 16:16:13 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"model_name"=>"subscription_plan"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.3ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "subscription_plans"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/application (77.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (4.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (4.8ms)
+Completed 200 OK in 264ms (Views: 255.9ms | ActiveRecord: 1.0ms)
+
+
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:14 +0300
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:14 +0300
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:14 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:14 +0300
+
+
+Started GET "/saas_admin/subscription_plan/2/edit?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:16:18 +0300
+Processing by RailsAdmin::MainController#edit as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_plan", "id"=>"2"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPlan Load (0.3ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = 2 ORDER BY "subscription_plans"."id" ASC LIMIT 1
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.1ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscription_plan_id" = ?[0m  [["subscription_plan_id", 2]]
+  [1m[35mSubscription Load (0.2ms)[0m  SELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.id desc
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (6.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_submit_buttons.html.haml (0.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/edit.html.haml within layouts/rails_admin/pjax (174.0ms)
+Completed 200 OK in 241ms (Views: 232.6ms | ActiveRecord: 1.2ms)
+
+
+Started PUT "/saas_admin/subscription_plan/2/edit" for 127.0.0.1 at 2014-05-06 16:16:29 +0300
+Processing by RailsAdmin::MainController#edit as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"TPkR0IZ5YmfkegNEx5suFdxZOzn/qVH6i9VW9EajSwM=", "subscription_plan"=>{"name"=>"Basic", "amount"=>"10.0", "renewal_period"=>"1", "setup_amount"=>"", "trial_period"=>"1", "trial_interval"=>"months", "user_limit"=>"10", "subscription_ids"=>["", ""]}, "return_to"=>"http://subscriptions.dev/saas_admin/subscription_plan", "_save"=>"", "model_name"=>"subscription_plan", "id"=>"2"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPlan Load (0.3ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = 2 ORDER BY "subscription_plans"."id" ASC LIMIT 1
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscription_plan_id" = ?[0m  [["subscription_plan_id", 2]]
+  [1m[35m (0.1ms)[0m  begin transaction
+  [1m[36m (0.0ms)[0m  [1mcommit transaction[0m
+  [1m[35m (0.0ms)[0m  begin transaction
+  [1m[36mSQL (0.6ms)[0m  [1mUPDATE "subscription_plans" SET "user_limit" = ?, "updated_at" = ? WHERE "subscription_plans"."id" = 2[0m  [["user_limit", 10], ["updated_at", Tue, 06 May 2014 13:16:29 UTC +00:00]]
+  [1m[35m (51.6ms)[0m  commit transaction
+Redirected to http://subscriptions.dev/saas_admin/subscription_plan
+Completed 302 Found in 74ms (ActiveRecord: 53.2ms)
+
+
+Started GET "/saas_admin/subscription_plan" for 127.0.0.1 at 2014-05-06 16:16:30 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"model_name"=>"subscription_plan"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.2ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPlan Load (0.3ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.3ms)[0m  [1mSELECT COUNT(*) FROM "subscription_plans"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/application (36.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (3.6ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (5.6ms)
+Completed 200 OK in 128ms (Views: 118.2ms | ActiveRecord: 1.1ms)
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:30 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:30 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:30 +0300
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:16:30 +0300
+
+
+Started GET "/saas_admin/subscription_plan/3/edit?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:16:34 +0300
+Processing by RailsAdmin::MainController#edit as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"subscription_plan", "id"=>"3"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.4ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = 3 ORDER BY "subscription_plans"."id" ASC LIMIT 1[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (84.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.2ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_field.html.haml (0.3ms)
+  [1m[35mSubscription Load (0.2ms)[0m  SELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscription_plan_id" = ?  [["subscription_plan_id", 3]]
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.id desc[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_form_filtering_multiselect.html.haml (5.4ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/_submit_buttons.html.haml (0.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/edit.html.haml within layouts/rails_admin/pjax (198.0ms)
+Completed 200 OK in 259ms (Views: 237.0ms | ActiveRecord: 1.3ms)
+
+
+Started GET "/saas_admin/user?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:16:50 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"user"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mUser Load (0.3ms)[0m  [1mSELECT "users".* FROM "users" ORDER BY users.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "users"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (32.0ms)
+Completed 200 OK in 94ms (Views: 84.0ms | ActiveRecord: 0.9ms)
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:16:59 +0300
+Processing by ContentController#index as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  Rendered content/index.html.erb within layouts/application (2.2ms)
+Completed 200 OK in 328ms (Views: 325.4ms | ActiveRecord: 0.7ms)
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:00 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:01 +0300
+
+
+Started GET "/signup" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+Processing by AccountsController#plans as HTML
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" ORDER BY amount desc
+  Rendered accounts/plans.html.erb within layouts/application (3.6ms)
+Completed 200 OK in 33ms (Views: 29.7ms | ActiveRecord: 0.6ms)
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:07 +0300
+
+
+Started GET "/signup/Free" for 127.0.0.1 at 2014-05-06 16:17:10 +0300
+Processing by AccountsController#new as HTML
+  Parameters: {"plan"=>"Free"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSubscriptionPlan Load (0.2ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."name" = 'Free' LIMIT 1[0m
+  Rendered accounts/new.html.erb within layouts/application (19.2ms)
+Completed 200 OK in 51ms (Views: 47.3ms | ActiveRecord: 0.5ms)
+
+
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:11 +0300
+
+
+Started POST "/account" for 127.0.0.1 at 2014-05-06 16:17:27 +0300
+Processing by AccountsController#create as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"TPkR0IZ5YmfkegNEx5suFdxZOzn/qVH6i9VW9EajSwM=", "plan"=>"Free", "account"=>{"name"=>"SEU ltd", "domain"=>"seu", "admin_attributes"=>{"email"=>"papidakis@gmail.com", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+Unpermitted parameters: utf8, authenticity_token
+  [1m[35mSubscriptionPlan Load (0.3ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."name" = 'Free' LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35mUser Exists (27.5ms)[0m  SELECT 1 AS one FROM "users" WHERE ("users"."email" = 'papidakis@gmail.com' AND "users"."account_id" IS NULL) LIMIT 1
+  [1m[36mCACHE (0.0ms)[0m  [1mSELECT 1 AS one FROM "users" WHERE ("users"."email" = 'papidakis@gmail.com' AND "users"."account_id" IS NULL) LIMIT 1[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "accounts" WHERE (full_domain = 'seu.subscriptions.dev')
+  [1m[36mSQL (1.3ms)[0m  [1mINSERT INTO "accounts" ("created_at", "full_domain", "name", "updated_at") VALUES (?, ?, ?, ?)[0m  [["created_at", Tue, 06 May 2014 13:17:27 UTC +00:00], ["full_domain", "seu.subscriptions.dev"], ["name", "SEU ltd"], ["updated_at", Tue, 06 May 2014 13:17:27 UTC +00:00]]
+Binary data inserted for `string` type on column `encrypted_password`
+  [1m[35mSQL (0.9ms)[0m  INSERT INTO "users" ("account_id", "admin", "created_at", "email", "encrypted_password", "updated_at") VALUES (?, ?, ?, ?, ?, ?)  [["account_id", 1], ["admin", true], ["created_at", Tue, 06 May 2014 13:17:27 UTC +00:00], ["email", "papidakis@gmail.com"], ["encrypted_password", "$2a$10$.A5wWLasLLhPfBJ/x5snMe6oAOBCw9/y9ZnENbXH40GjTbV5noJr6"], ["updated_at", Tue, 06 May 2014 13:17:27 UTC +00:00]]
+  [1m[36mSQL (0.5ms)[0m  [1mINSERT INTO "subscriptions" ("amount", "created_at", "next_renewal_at", "state", "subscriber_id", "subscriber_type", "subscription_plan_id", "updated_at", "user_limit") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["amount", #<BigDecimal:7fa23e938ba8,'0.0',9(36)>], ["created_at", Tue, 06 May 2014 13:17:27 UTC +00:00], ["next_renewal_at", Fri, 06 Jun 2014 13:17:27 UTC +00:00], ["state", "active"], ["subscriber_id", 1], ["subscriber_type", "Account"], ["subscription_plan_id", 1], ["updated_at", Tue, 06 May 2014 13:17:27 UTC +00:00], ["user_limit", 5]]
+  [1m[35m (14.1ms)[0m  commit transaction
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/saas-kit-3.0.2/app/views/subscription_notifier/welcome.text.erb (0.9ms)
+
+Sent mail to papidakis@gmail.com (250.1ms)
+Date: Tue, 06 May 2014 16:17:28 +0300
+From: support@sampleapp.com
+To: papidakis@gmail.com
+Message-ID: <5368e0e8ec49_7e03fd11e0506d47825@I7s-MacBook-Pro.local.mail>
+Subject: Welcome to SampleApp!
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+Welcome to SampleApp!
+
+You signed up for the Free plan with the email address papidakis@gmail.com.
+
+To sign in again in the future, please return to the following
+URL and use the email address and password you used to create 
+your account:
+
+http://seu.subscriptions.dev
+
+If you have any questions about or problems with the service, 
+please don't hesitate to email support@sampleapp.com.
+
+Redirected to http://subscriptions.dev/signup/thanks
+Completed 302 Found in 757ms (ActiveRecord: 45.2ms)
+
+
+Started GET "/signup/thanks" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+Processing by AccountsController#thanks as HTML
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  Rendered accounts/thanks.html.erb within layouts/application (1.0ms)
+Completed 200 OK in 41ms (Views: 38.2ms | ActiveRecord: 0.3ms)
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:28 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:29 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:29 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:29 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:29 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:29 +0300
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:17:34 +0300
+Processing by AccountsController#dashboard as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+Completed 401 Unauthorized in 2ms
+
+
+Started GET "/users/sign_in" for 127.0.0.1 at 2014-05-06 16:17:34 +0300
+Processing by Devise::SessionsController#new as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  Rendered devise/shared/_links.erb (0.6ms)
+  Rendered users/sessions/new.html.erb within layouts/application (13.3ms)
+Completed 200 OK in 43ms (Views: 39.9ms | ActiveRecord: 0.3ms)
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:35 +0300
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2014-05-06 16:17:49 +0300
+Processing by Devise::SessionsController#create as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"vzjwfKpc0peEOzk2sLrj4TPmuLV1HcZmttDIGUxdumA=", "user"=>{"account_id"=>"1", "email"=>"papidakis@gmail.com", "password"=>"[FILTERED]", "remember_me"=>"0"}, "commit"=>"Sign in"}
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+  [1m[35mUser Load (0.3ms)[0m  SELECT "users".* FROM "users" WHERE "users"."email" = 'papidakis@gmail.com' AND "users"."account_id" = 1 ORDER BY "users"."id" ASC LIMIT 1
+  [1m[36m (0.2ms)[0m  [1mbegin transaction[0m
+  [1m[35mSQL (0.9ms)[0m  UPDATE "users" SET "last_sign_in_at" = ?, "current_sign_in_at" = ?, "last_sign_in_ip" = ?, "current_sign_in_ip" = ?, "sign_in_count" = ?, "updated_at" = ? WHERE "users"."id" = 1  [["last_sign_in_at", Tue, 06 May 2014 13:17:49 UTC +00:00], ["current_sign_in_at", Tue, 06 May 2014 13:17:49 UTC +00:00], ["last_sign_in_ip", "127.0.0.1"], ["current_sign_in_ip", "127.0.0.1"], ["sign_in_count", 1], ["updated_at", Tue, 06 May 2014 13:17:49 UTC +00:00]]
+  [1m[36m (623.1ms)[0m  [1mcommit transaction[0m
+Redirected to http://seu.subscriptions.dev/
+Completed 302 Found in 739ms (ActiveRecord: 624.7ms)
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:17:49 +0300
+Processing by AccountsController#dashboard as HTML
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  [1m[36mUser Load (0.2ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1[0m
+  Rendered accounts/dashboard.html.erb within layouts/application (1.4ms)
+Completed 200 OK in 61ms (Views: 57.9ms | ActiveRecord: 0.4ms)
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:50 +0300
+
+
+Started GET "/users" for 127.0.0.1 at 2014-05-06 16:17:55 +0300
+Processing by UsersController#index as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  [1m[36mSubscription Load (0.3ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1  [["id", 1]]
+  [1m[36mUser Load (0.2ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1[0m
+  [1m[35mUser Load (0.3ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+  Rendered users/index.html.erb within layouts/application (3.3ms)
+Completed 200 OK in 68ms (Views: 58.3ms | ActiveRecord: 1.3ms)
+
+
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:17:59 +0300
+
+
+Started GET "/users/new" for 127.0.0.1 at 2014-05-06 16:18:01 +0300
+Processing by UsersController#new as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+  [1m[35mSubscription Load (0.2ms)[0m  SELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[36mSubscriptionPlan Load (0.1ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1[0m  [["id", 1]]
+  [1m[35mUser Load (0.2ms)[0m  SELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1
+  [1m[36m (0.3ms)[0m  [1mSELECT COUNT(*) FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+  Rendered users/_form.html.erb (8.6ms)
+  Rendered users/new.html.erb within layouts/application (37.2ms)
+Completed 200 OK in 108ms (Views: 100.2ms | ActiveRecord: 1.0ms)
+
+
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:02 +0300
+
+
+Started POST "/users" for 127.0.0.1 at 2014-05-06 16:18:30 +0300
+Processing by UsersController#create as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"/ezs8nn+yC5ikbpf4gsNVm/fXon26TWgtQvcgeaM5hw=", "user"=>{"name"=>"Seu User 1", "email"=>"su1@seu.com", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "commit"=>"Save Changes"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  [1m[36mSubscription Load (0.1ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPlan Load (0.1ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1  [["id", 1]]
+  [1m[36mUser Load (0.1ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1[0m
+  [1m[35m (0.1ms)[0m  SELECT COUNT(*) FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+Unpermitted parameters: utf8, authenticity_token, commit
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35mUser Exists (0.2ms)[0m  SELECT 1 AS one FROM "users" WHERE ("users"."email" = 'su1@seu.com' AND "users"."account_id" = 1) LIMIT 1
+Binary data inserted for `string` type on column `encrypted_password`
+  [1m[36mSQL (0.6ms)[0m  [1mINSERT INTO "users" ("account_id", "created_at", "email", "encrypted_password", "name", "updated_at") VALUES (?, ?, ?, ?, ?, ?)[0m  [["account_id", 1], ["created_at", Tue, 06 May 2014 13:18:30 UTC +00:00], ["email", "su1@seu.com"], ["encrypted_password", "$2a$10$CPySQ8uVqmepwKQFsKV1Rube3wi72ZKiXlRO8/ndiWdlgX3.xeERe"], ["name", "Seu User 1"], ["updated_at", Tue, 06 May 2014 13:18:30 UTC +00:00]]
+  [1m[35m (178.2ms)[0m  commit transaction
+Redirected to http://seu.subscriptions.dev/users
+Completed 302 Found in 262ms (ActiveRecord: 179.8ms)
+
+
+Started GET "/users" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+Processing by UsersController#index as HTML
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+  [1m[35mSubscription Load (0.1ms)[0m  SELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[36mSubscriptionPlan Load (0.1ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1[0m  [["id", 1]]
+  [1m[35mUser Load (0.2ms)[0m  SELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1
+  [1m[36mUser Load (0.2ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+  Rendered users/index.html.erb within layouts/application (2.0ms)
+Completed 200 OK in 21ms (Views: 15.5ms | ActiveRecord: 0.8ms)
+
+
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:31 +0300
+
+
+Started GET "/users/new" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+Processing by UsersController#new as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  [1m[36mSubscription Load (0.1ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPlan Load (0.1ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1  [["id", 1]]
+  [1m[36mUser Load (0.3ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1[0m
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+  Rendered users/_form.html.erb (6.3ms)
+  Rendered users/new.html.erb within layouts/application (16.6ms)
+Completed 200 OK in 45ms (Views: 38.8ms | ActiveRecord: 1.0ms)
+
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:18:35 +0300
+
+
+Started POST "/users" for 127.0.0.1 at 2014-05-06 16:18:59 +0300
+Processing by UsersController#create as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"/ezs8nn+yC5ikbpf4gsNVm/fXon26TWgtQvcgeaM5hw=", "user"=>{"name"=>"Seu User 2", "email"=>"s2@gmail.com", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "commit"=>"Save Changes"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+  [1m[35mSubscription Load (0.1ms)[0m  SELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[36mSubscriptionPlan Load (0.1ms)[0m  [1mSELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1[0m  [["id", 1]]
+  [1m[35mUser Load (0.1ms)[0m  SELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+Unpermitted parameters: utf8, authenticity_token, commit
+  [1m[35m (0.2ms)[0m  begin transaction
+  [1m[36mUser Exists (0.2ms)[0m  [1mSELECT 1 AS one FROM "users" WHERE ("users"."email" = 's2@gmail.com' AND "users"."account_id" = 1) LIMIT 1[0m
+Binary data inserted for `string` type on column `encrypted_password`
+  [1m[35mSQL (0.5ms)[0m  INSERT INTO "users" ("account_id", "created_at", "email", "encrypted_password", "name", "updated_at") VALUES (?, ?, ?, ?, ?, ?)  [["account_id", 1], ["created_at", Tue, 06 May 2014 13:18:59 UTC +00:00], ["email", "s2@gmail.com"], ["encrypted_password", "$2a$10$aMM6yqg6SOUFnM1Uh7eJ4OqCH.6OPjljRBFJOruH7Z05hDnyeOrAi"], ["name", "Seu User 2"], ["updated_at", Tue, 06 May 2014 13:18:59 UTC +00:00]]
+  [1m[36m (57.1ms)[0m  [1mcommit transaction[0m
+Redirected to http://seu.subscriptions.dev/users
+Completed 302 Found in 141ms (ActiveRecord: 58.6ms)
+
+
+Started GET "/users" for 127.0.0.1 at 2014-05-06 16:19:00 +0300
+Processing by UsersController#index as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" WHERE "subscription_plans"."id" = ? ORDER BY "subscription_plans"."id" ASC LIMIT 1  [["id", 1]]
+  [1m[36mUser Load (0.3ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1[0m
+  [1m[35mUser Load (6.9ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+  Rendered users/index.html.erb within layouts/application (9.7ms)
+Completed 200 OK in 74ms (Views: 53.7ms | ActiveRecord: 7.9ms)
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:00 +0300
+
+
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:01 +0300
+
+
+Started DELETE "/users/sign_out" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+Processing by Devise::SessionsController#destroy as HTML
+  Parameters: {"authenticity_token"=>"/ezs8nn+yC5ikbpf4gsNVm/fXon26TWgtQvcgeaM5hw="}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+  [1m[35mUser Load (0.3ms)[0m  SELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mbegin transaction[0m
+  [1m[35m (0.0ms)[0m  commit transaction
+Redirected to http://seu.subscriptions.dev/
+Completed 302 Found in 10ms (ActiveRecord: 0.6ms)
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+Processing by AccountsController#dashboard as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1[0m
+Completed 401 Unauthorized in 2ms
+
+
+Started GET "/users/sign_in" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+Processing by Devise::SessionsController#new as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'seu.subscriptions.dev' LIMIT 1
+  Rendered devise/shared/_links.erb (0.5ms)
+  Rendered users/sessions/new.html.erb within layouts/application (7.6ms)
+Completed 200 OK in 49ms (Views: 46.7ms | ActiveRecord: 0.3ms)
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:08 +0300
+
+
+Started GET "/" for 127.0.0.1 at 2014-05-06 16:19:12 +0300
+Processing by ContentController#index as HTML
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.3ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  Rendered content/index.html.erb within layouts/application (1.9ms)
+Completed 200 OK in 15ms (Views: 12.2ms | ActiveRecord: 0.8ms)
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+
+
+Started GET "/assets/bootstrap.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/bootstrap/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/accounts.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/layout.css?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/accounts.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/stripe_form.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:13 +0300
+
+
+Started GET "/saas_admin" for 127.0.0.1 at 2014-05-06 16:19:15 +0300
+Processing by RailsAdmin::MainController#dashboard as HTML
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.1ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "saas_admins"[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" ORDER BY saas_admins.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscriptions"[0m
+  [1m[35mSubscription Load (0.4ms)[0m  SELECT "subscriptions".* FROM "subscriptions" ORDER BY subscriptions.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_affiliates"[0m
+  [1m[35mSubscriptionAffiliate Load (0.2ms)[0m  SELECT "subscription_affiliates".* FROM "subscription_affiliates" ORDER BY subscription_affiliates.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_discounts"[0m
+  [1m[35mSubscriptionDiscount Load (0.2ms)[0m  SELECT "subscription_discounts".* FROM "subscription_discounts" ORDER BY subscription_discounts.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_payments"[0m
+  [1m[35mSubscriptionPayment Load (0.2ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" ORDER BY subscription_payments.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "subscription_plans"[0m
+  [1m[35mSubscriptionPlan Load (0.2ms)[0m  SELECT "subscription_plans".* FROM "subscription_plans" ORDER BY subscription_plans.updated_at desc LIMIT 1
+  [1m[36m (0.1ms)[0m  [1mSELECT COUNT(*) FROM "users"[0m
+  [1m[35mUser Load (0.3ms)[0m  SELECT "users".* FROM "users" ORDER BY users.updated_at desc LIMIT 1
+  [1m[36m (0.3ms)[0m  [1mSELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-01 00:00:00.000000' AND '2014-04-30 23:59:59.999999')[0m
+  [1m[35m (0.2ms)[0m  SELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-30 21:00:00.000000' AND '2014-05-31 20:59:59.999999')
+  [1m[36m (0.2ms)[0m  [1mSELECT SUM("subscription_payments"."amount") AS sum_id FROM "subscription_payments" WHERE ("subscription_payments"."created_at" BETWEEN '2014-04-06 13:19:15.441940' AND '2014-05-06 13:19:15.442063')[0m
+  Rendered rails_admin/main/dashboard.html.haml within layouts/rails_admin/application (6.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (3.8ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (1.8ms)
+Completed 200 OK in 107ms (Views: 88.8ms | ActiveRecord: 4.0ms)
+
+
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:15 +0300
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:15 +0300
+
+
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:15 +0300
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:15 +0300
+
+
+Started GET "/saas_admin/user?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:19:19 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"user"}
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.1ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mUser Load (0.3ms)[0m  [1mSELECT "users".* FROM "users" ORDER BY users.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35mAccount Load (0.4ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."id" IN (1)
+  [1m[36m (0.3ms)[0m  [1mSELECT COUNT(*) FROM "users"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (63.3ms)
+Completed 200 OK in 149ms (Views: 139.4ms | ActiveRecord: 1.5ms)
+
+
+Started GET "/saas_admin/account?_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:19:33 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35mUser Load (0.1ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+
+
+Started GET "/saas_admin/account" for 127.0.0.1 at 2014-05-06 16:19:35 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"model_name"=>"account"}
+  [1m[36mAccount Load (47.7ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (58.6ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (60.4ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (3360.8ms)
+Completed 200 OK in 3377ms (Views: 3369.0ms | ActiveRecord: 1.2ms)
+  [1m[36mUser Load (184.6ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+  [1m[35m (0.2ms)[0m  SELECT COUNT(*) FROM "accounts"
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/application (1921.5ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (2.9ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (5.6ms)
+Completed 200 OK in 2355ms (Views: 1947.1ms | ActiveRecord: 395.3ms)
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:38 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:38 +0300
+
+
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:38 +0300
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:19:38 +0300
+
+
+Started GET "/saas_admin/account?utf8=%E2%9C%93&query=&_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:19:46 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"utf8"=>"✓", "query"=>"", "_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.3ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mAccount Load (0.4ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35mUser Load (0.2ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (127.3ms)
+Completed 200 OK in 258ms (Views: 243.5ms | ActiveRecord: 1.5ms)
+
+
+Started GET "/saas_admin/account?utf8=%E2%9C%93&query=&_pjax=%5Bdata-pjax-container%5D" for 127.0.0.1 at 2014-05-06 16:19:47 +0300
+Processing by RailsAdmin::MainController#index as HTML
+  Parameters: {"utf8"=>"✓", "query"=>"", "_pjax"=>"[data-pjax-container]", "model_name"=>"account"}
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 20 OFFSET 0[0m
+  [1m[35mUser Load (0.2ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ?  [["account_id", 1]]
+  [1m[36m (0.2ms)[0m  [1mSELECT COUNT(*) FROM "accounts"[0m
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/index.html.haml within layouts/rails_admin/pjax (26.1ms)
+Completed 200 OK in 43ms (Views: 33.7ms | ActiveRecord: 1.4ms)
+
+
+Started GET "/saas_admin/account/export" for 127.0.0.1 at 2014-05-06 16:20:02 +0300
+Processing by RailsAdmin::MainController#export as HTML
+  Parameters: {"model_name"=>"account"}
+  [1m[35mAccount Load (0.4ms)[0m  SELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1[0m
+  [1m[35mSaasAdmin Load (0.2ms)[0m  SELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/rails_admin/main/export.html.haml within layouts/rails_admin/application (92.0ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/_secondary_navigation.html.haml (3.3ms)
+  Rendered /Users/admin/.rvm/gems/ruby-2.0.0-p195/gems/rails_admin-0.6.0/app/views/layouts/rails_admin/pjax.html.haml (6.5ms)
+Completed 200 OK in 305ms (Views: 298.1ms | ActiveRecord: 0.7ms)
+
+
+Started GET "/assets/jquery/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:20:02 +0300
+
+
+Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2014-05-06 16:20:02 +0300
+
+
+
+
+Started GET "/assets/jquery.ui.datepicker.js?body=1" for 127.0.0.1 at 2014-05-06 16:20:02 +0300
+Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2014-05-06 16:20:02 +0300
+
+
+Started POST "/saas_admin/account/export?all=true" for 127.0.0.1 at 2014-05-06 16:20:59 +0300
+Processing by RailsAdmin::MainController#export as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"TPkR0IZ5YmfkegNEx5suFdxZOzn/qVH6i9VW9EajSwM=", "send_data"=>"true", "all"=>"true", "schema"=>{"only"=>["id", "name", "full_domain", "created_at", "updated_at"], "include"=>{"users"=>{"only"=>["id", "email", "reset_password_sent_at", "remember_created_at", "sign_in_count", "current_sign_in_at", "last_sign_in_at", "current_sign_in_ip", "last_sign_in_ip", "name", "admin", "created_at", "updated_at"]}, "admin"=>{"only"=>["id", "email", "reset_password_sent_at", "remember_created_at", "sign_in_count", "current_sign_in_at", "last_sign_in_at", "current_sign_in_ip", "last_sign_in_ip", "name", "admin", "created_at", "updated_at"]}, "subscription"=>{"only"=>["id", "amount", "next_renewal_at", "card_number", "card_expiration", "created_at", "updated_at", "state", "renewal_period", "billing_id", "user_limit"]}, "subscription_payments"=>{"only"=>["id", "amount", "transaction_id", "created_at", "updated_at", "setup", "misc", "affiliate_amount"]}}}, "csv_options"=>{"encoding_to"=>"UTF-8", "generator"=>{"col_sep"=>","}}, "return_to"=>"http://subscriptions.dev/saas_admin/account?utf8=%E2%9C%93&query=", "xml"=>"", "model_name"=>"account"}
+  [1m[36mAccount Load (0.2ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc
+  [1m[36mUser Load (0.2ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+  [1m[35mUser Load (0.3ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ? AND "users"."admin" = 't' ORDER BY "users"."id" ASC LIMIT 1  [["account_id", 1]]
+  [1m[36mSubscription Load (0.1ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPayment Load (8.6ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" WHERE "subscription_payments"."subscriber_id" = ? AND "subscription_payments"."subscriber_type" = ?  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  Rendered text template (0.0ms)
+Sent data account_2014-05-06_16h21m00.xml (62.1ms)
+Completed 200 OK in 96ms (Views: 61.8ms | ActiveRecord: 10.0ms)
+
+
+Started POST "/saas_admin/account/export?all=true" for 127.0.0.1 at 2014-05-06 16:21:26 +0300
+Processing by RailsAdmin::MainController#export as HTML
+  Parameters: {"utf8"=>"✓", "authenticity_token"=>"TPkR0IZ5YmfkegNEx5suFdxZOzn/qVH6i9VW9EajSwM=", "send_data"=>"true", "all"=>"true", "schema"=>{"only"=>["id", "name", "full_domain", "created_at", "updated_at"], "include"=>{"users"=>{"only"=>["id", "email", "reset_password_sent_at", "remember_created_at", "sign_in_count", "current_sign_in_at", "last_sign_in_at", "current_sign_in_ip", "last_sign_in_ip", "name", "admin", "created_at", "updated_at"]}, "admin"=>{"only"=>["id", "email", "reset_password_sent_at", "remember_created_at", "sign_in_count", "current_sign_in_at", "last_sign_in_at", "current_sign_in_ip", "last_sign_in_ip", "name", "admin", "created_at", "updated_at"]}, "subscription"=>{"only"=>["id", "amount", "next_renewal_at", "card_number", "card_expiration", "created_at", "updated_at", "state", "renewal_period", "billing_id", "user_limit"]}, "subscription_payments"=>{"only"=>["id", "amount", "transaction_id", "created_at", "updated_at", "setup", "misc", "affiliate_amount"]}}}, "csv_options"=>{"encoding_to"=>"UTF-8", "generator"=>{"col_sep"=>","}}, "return_to"=>"http://subscriptions.dev/saas_admin/account?utf8=%E2%9C%93&query=", "csv"=>"", "model_name"=>"account"}
+  [1m[36mAccount Load (0.3ms)[0m  [1mSELECT "accounts".* FROM "accounts" WHERE "accounts"."full_domain" = 'subscriptions.dev' LIMIT 1[0m
+  [1m[35mAccount Load (0.1ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1
+  [1m[36mSaasAdmin Load (0.1ms)[0m  [1mSELECT "saas_admins".* FROM "saas_admins" WHERE "saas_admins"."id" = 1 ORDER BY "saas_admins"."id" ASC LIMIT 1[0m
+  [1m[35mAccount Load (0.2ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc
+  [1m[36mAccount Load (0.1ms)[0m  [1mSELECT "accounts".* FROM "accounts" ORDER BY accounts.id desc LIMIT 1[0m
+Scoped order and limit are ignored, it's forced to be batch order and batch size
+  [1m[35mAccount Load (0.3ms)[0m  SELECT "accounts".* FROM "accounts" ORDER BY "accounts"."id" ASC LIMIT 1000
+  [1m[36mUser Load (0.1ms)[0m  [1mSELECT "users".* FROM "users" WHERE "users"."account_id" = ?[0m  [["account_id", 1]]
+  [1m[35mUser Load (0.1ms)[0m  SELECT "users".* FROM "users" WHERE "users"."account_id" = ? AND "users"."admin" = 't' ORDER BY "users"."id" ASC LIMIT 1  [["account_id", 1]]
+  [1m[36mSubscription Load (0.2ms)[0m  [1mSELECT "subscriptions".* FROM "subscriptions" WHERE "subscriptions"."subscriber_id" = ? AND "subscriptions"."subscriber_type" = ? ORDER BY "subscriptions"."id" ASC LIMIT 1[0m  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  [1m[35mSubscriptionPayment Load (0.1ms)[0m  SELECT "subscription_payments".* FROM "subscription_payments" WHERE "subscription_payments"."subscriber_id" = ? AND "subscription_payments"."subscriber_type" = ?  [["subscriber_id", 1], ["subscriber_type", "Account"]]
+  Rendered text template (0.1ms)
+Sent data  (0.8ms)
+Completed 200 OK in 59ms (Views: 0.7ms | ActiveRecord: 1.7ms)
