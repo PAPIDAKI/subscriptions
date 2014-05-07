@@ -180,3 +180,5 @@ For testing credit cards with the bogus gateway in development mode,
 use 1 for a valid card and 2 for an invalid one.  If you configure
 a different gateway for development mode, see your gateway provider's
 documentation for test card numbers.
+
+1

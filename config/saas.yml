@@ -1,7 +1,7 @@
 defaults: &defaults
-  app_name: SampleApp
-  from_email: support@sampleapp.com
-  base_domain: sampleapp.com
+  app_name: instagap
+  from_email: support@instagap.com
+  base_domain: instagap.com
 
   gateway: bogus # Change this to stripe to use stripe
   credentials:
