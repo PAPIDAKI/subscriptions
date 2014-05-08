@@ -4,6 +4,8 @@ class MainSite
   end
 end
 
+root :to=>'content#index'
+
 Saas::Application.routes.draw do
 
   devise_for :saas_admins
